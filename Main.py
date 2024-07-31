@@ -1,10 +1,6 @@
 import csv
 import math
 import enum
-import packages
-from hashTable import ChainingHashTable
-from packages import loadPackageData
-from packages import myHash
 from tokenize import Double
 from datetime import datetime, timedelta
 
@@ -176,16 +172,19 @@ def getDistances(truckPackageIDs, truckDestinations):
         allPackageIDs.append(ID)
 
 def getNextDestination(truckPackages, truck):
-    currentLocation = 0                                                                                                 # orig 0, set to -1 for multi packages at same address      (idea for now)
-    indexes = getDistanceCols(truckPackages, truck)
-    m = float('inf')                                                                                                    # Initialize m to a very high value
-    currentCol = getColumn(distances, 0)
     global temp_index_address
     global milage
+    currentLocation = truck.currentLocation                                                                             # new line to correct wrong destination
+    indexes = getDistanceCols(truckPackages, truck)
+
+    m = float('inf')                                                                                                    # Initialize m to a very high value
+    currentCol = getColumn(distances, 0)                        # returns column, need to kep track of current location index and pass as i, not just 0
+    # if column != 0
+    #   currentCol = getColumn(distances, temp_index_address)
+
 
     for i in indexes:
         distance = currentCol[i]
-        #print("Distance: " + distance)
         if distance != '0':
             distance = float(distance)
             if distance < m:
@@ -198,7 +197,7 @@ def getNextDestination(truckPackages, truck):
         milage = 0
     else:
         print(f"Closest destination is {m} miles away.")
-        print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
+        print(f"Closest destination is at address: {allAddresses[temp_index_address]}")                 # wrong
 
 
 def driveToLocation(truck):
@@ -272,6 +271,8 @@ truck_3.loadPackages(Truck_3_Packages)
 truck_4 = Truck()
 truck_4.loadPackages(Truck_1_SecondTrip_Packages)
 
+total_milage = 0
+
 # print('\nPackages in Truck #1')
 # for i, sublist in enumerate(truck_1.packages):
 #     print(truck_1.packages[i])
@@ -285,6 +286,7 @@ for packages in truck_1.packages:                                               
     truck_1.loadPackages(Truck_1_Packages)                                                                              # refresh truck.packages
 
 print(f"Truck 1 milage: {truck_1.miles}")
+total_milage += truck_1.miles
 milage = 0
 
 for packages in truck_2.packages:
@@ -297,6 +299,7 @@ for packages in truck_2.packages:
 
 
 print(f" Truck 2 milage: {truck_2.miles}")
+total_milage += truck_2.miles
 milage = 0
 
 for packages in truck_3.packages:
@@ -309,6 +312,7 @@ for packages in truck_3.packages:
 
 
 print(f" Truck 3 milage: {truck_3.miles}")
+total_milage += truck_3.miles
 milage = 0
 
 for packages in truck_4.packages:
@@ -321,9 +325,12 @@ for packages in truck_4.packages:
 
 
 print(f" Truck 4 milage: {truck_4.miles}")
+total_milage += truck_4.miles
 milage = 0
 
-print("\nPackages from Hashtable:")
-# Fetch data from Hash Table
-for i in range(len(myHash.table) + 1):
-    print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+print(f"The total milage for all trucks is : {total_milage}")
+
+# print("\nPackages from Hashtable:")
+# # Fetch data from Hash Table
+# for i in range(len(myHash.table) + 1):
+#     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
