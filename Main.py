@@ -291,6 +291,15 @@ Truck_1_SecondTrip_Packages = [2, 22, 33]                                       
 truck_1 = Truck()                                                                # instantiate first truck
 truck_1.loadPackages(Truck_1_Packages)                                           # load first truck
 
+truck_2 = Truck()
+truck_2.loadPackages(Truck_2_Packages)
+
+truck_3 = Truck()
+truck_3.loadPackages(Truck_3_Packages)
+
+truck_4 = Truck()
+truck_4.loadPackages(Truck_1_SecondTrip_Packages)
+
 # truckDistances = getPackageDistances(truck_1.packages, truck_1)
 #print("TRUCK DISTANCES")
 #print(truckDistances)
@@ -311,25 +320,33 @@ truck_1.loadPackages(Truck_1_Packages)                                          
 # deliverPackage(Truck_1_Packages)
 
 
-for packages in Truck_1_Packages:                                                                                       # for loop to deliver packges while list had objs
-
-    # print('\nPackages in Truck #1')
-    # for i, sublist in enumerate(Truck_1_Packages):
-    #     print(Truck_1_Packages[i])
+for packages in truck_1.packages:                                                                                       # for loop to deliver packges while list had objs
 
     getNextDestination(getTruckDestinations(Truck_1_Packages, truck_1))                                                 # leave truck package list alone, change Truck_1_Packages
     driveToLocation(truck_1)
     deliverPackage(truck_1, Truck_1_Packages)
     truck_1.loadPackages(Truck_1_Packages)            # refresh truck.packages
 
+
     # if truck_packages is empty
         # returnToHub()
 
-    # print("\nPackages from Hashtable:")
-    # # Fetch data from Hash Table
-    # for i in range(len(myHash.table) + 1):
-    #     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+print(f" Truck 1 milage: {truck_1.miles}")
 
+for packages in truck_2.packages:                                                        #need to tweak functions to use generic stuff
+
+    getNextDestination(getTruckDestinations(Truck_2_Packages, truck_2))
+    driveToLocation(truck_2)
+    deliverPackage(truck_2, Truck_2_Packages)
+    truck_2.loadPackages(Truck_2_Packages)            # refresh truck.packages
+
+
+print(f" Truck 2 milage: {truck_2.miles}")
+
+
+# print('\nPackages in Truck #1')
+# for i, sublist in enumerate(Truck_1_Packages):
+#     print(Truck_1_Packages[i])
 
 # print("\nPackages from Hashtable:")
 # # Fetch data from Hash Table
