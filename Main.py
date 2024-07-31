@@ -138,20 +138,19 @@ def loadPackageData(fileName):
 
 
 
-# makes truckDestination list with just addresses from truckPackages
-def getTruckDestinations(truckPackages, truck):
+def getTruckDestinations(truckPackages, truck):                                                                         # makes truckDestination list with just addresses from truckPackages
     global truckDestinations
     truckDestinations = []
     for package in range(len(truckPackages)):
-        truckDestinations.append(truck.packages[package].address)                   # this line is adding destinations from the truck.package, not the truck_1_package list
+        truckDestinations.append(truck.packages[package].address)
     return truckDestinations
 
-# Function that takes a matrix and list of indexes(i) and returns corresponding columns.
-def getColumn(matrix, i):
+
+def getColumn(matrix, i):                                                                                               # Function that takes a matrix and list of indexes(i) and returns corresponding columns.
     return [row[i] for row in matrix]
 
-# Returns list of column indexes given a list  of packages
-def getDistanceCols(truckPackages, truck):                                                          # increments by 1 due to conversion to array
+
+def getDistanceCols(truckPackages, truck):                                                                              # Returns list of column indexes given a list  of packages, increments by 1 due to conversion to array
     destinations = getTruckDestinations(truckPackages, truck)
     destinationIndexes = []
     for destination in destinations:
@@ -159,14 +158,13 @@ def getDistanceCols(truckPackages, truck):                                      
             destinationIndexes.append(allAddresses.index(destination))
     return destinationIndexes
 
-# Function that takes in a list of packages and returns the corresponding distance data.
-def getPackageDistances(truckPackages, truck):
+
+def getPackageDistances(truckPackages, truck):                                                                          # Function that takes in a list of packages and returns the corresponding distance data.
     destinationIndexes = getDistanceCols(truckPackages, truck)
     truckDistances = []
     for i in destinationIndexes:
         truckDistances.append(getColumn(distances, i))
     return truckDistances
-
 
 def getDistances(truckPackageIDs, truckDestinations):
     packageDistances = []
@@ -177,22 +175,11 @@ def getDistances(truckPackageIDs, truckDestinations):
         ID = col[0]
         allPackageIDs.append(ID)
 
-    #print('Row from address data:')
-    #print(addresses[0])
-    #print('Row from distance data:')
-    #print(distances[0])
-    #for address in range(len(addresses)):
-        #print(addresses[address][1])
-
-    #print(truckPackageDistanceList)
-
-def getNextDestination(currentLocation):                # should this be truck_1.currentLocation?
-    #global currentLocation
+def getNextDestination(truckPackages, truck):
     currentLocation = 0                                                                                                 # orig 0, set to -1 for multi packages at same address      (idea for now)
-    # indexes = getDistanceCols(truck_1.packages, truck_1)                                          original truck_1.packages
-    indexes = getDistanceCols(Truck_1_Packages, truck_1)
-    m = float('inf')  # Initialize m to a very high value
-    currentCol = getColumn(distances, 0)                # 0 needs to be from current column
+    indexes = getDistanceCols(truckPackages, truck)
+    m = float('inf')                                                                                                    # Initialize m to a very high value
+    currentCol = getColumn(distances, 0)
     global temp_index_address
     global milage
 
@@ -206,15 +193,12 @@ def getNextDestination(currentLocation):                # should this be truck_1
                 m = distance
                 milage = m
 
-
-    # Ensure m has been updated from its initial value
-    if m == float('inf'):
+    if m == float('inf'):                                                                                                   # Ensure m has been updated from its initial value
         print("No valid destination found")
+        milage = 0
     else:
         print(f"Closest destination is {m} miles away.")
-        #print(f"Closest destination is at index {temp_index_address}")
         print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
-        #print(f"Truck milage is {milage}.")
 
 
 def driveToLocation(truck):
@@ -222,19 +206,16 @@ def driveToLocation(truck):
     truck.currentLocation = allAddresses[temp_index_address]                                                            # set truck current location to getNextDestination()
     truck.miles += milage                                                                                               # increment truck milage with distance between the 2 locations
 
-def deliverPackage(truck_1, Truck_1_Packages):                                                                          # marks package as delivered with timestamp
-    for packages in truck_1.packages:
-        if truck_1.currentLocation == packages.address:
-
+def deliverPackage(truck, truckPackages):                                                                               # marks package as delivered with timestamp
+    for packages in truck.packages:
+        if truck.currentLocation == packages.address:
             tempPackage = myHash.search(packages.ID)
             tempPackage.status = deliveryTime()
             myHash.insert(packages, tempPackage)
             print(f"Delivered package: {packages.ID}")
-            Truck_1_Packages.remove(packages.ID)                                                                        # removes package from truck list, do last
+            truckPackages.remove(packages.ID)                                                                           # removes package from truck list
 
-            return Truck_1_Packages  # return updated truck package list
-
-        # Ensure all packages are delivered at once if same address, may work on its own without accounting for them specifically
+    return truckPackages                                                                                                # return updated truck package list
 
 
 def deliveryTime():
@@ -250,27 +231,22 @@ def deliveryTime():
     return deliveryTimeString
 
 
-def returnToHub(truck_packages):                                                                                        # if package list is empty
-    truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
-    truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
-    #truck.miles += milage                                      # milage won't work in current configuration, set to 0 when changing trucks?
-        # probably take temp_index_address and calc distance from that address to hub
-    #driverAvailable()
-
+# def returnToHub(truck_packages):                                                                                        # if package list is empty
+#     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
+#     truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
 
 # def driverAvailabile():                              # takes time from when T1 arrives at warehouse, and starts T3 then. OR. Calc by hand time taken, and just start T3 then. (much easier)
 
 
 
+# MAIN START
 
-
-myHash = ChainingHashTable()                # Hash table instance
-loadPackageData('testFile.csv')             # Load packages to Hash Table
+myHash = ChainingHashTable()                                                                                            # Hash table instance
+loadPackageData('testFile.csv')                                                                                         # Load packages to Hash Table
 distances = list(csv.reader(open('testDistance3.csv')))
 addresses = list(csv.reader(open('testAddresses.csv')))
 
-# List of all addresses
-allAddresses = []
+allAddresses = []                                                                                                       # List of all addresses
 for address in range(len(addresses)):
     allAddresses.append(addresses[address][1])
 
@@ -279,12 +255,8 @@ for address in range(len(addresses)):
 # for i in range(len(myHash.table) + 1):
 #     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
 
-
-#print(allAddresses)
-#print(allAddresses [18])
-
 Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]       # 14 packages
-Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18 , 21, 23, 29, 30, 36, 37, 38]  # 16 packages
+Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]   # 16 packages
 Truck_3_Packages = [6, 9, 24, 25, 26, 28, 32]                                    # 7  packages, departs when Truck 1 returns
 Truck_1_SecondTrip_Packages = [2, 22, 33]                                        # 3 remaining packages to be delivered
 
@@ -300,56 +272,58 @@ truck_3.loadPackages(Truck_3_Packages)
 truck_4 = Truck()
 truck_4.loadPackages(Truck_1_SecondTrip_Packages)
 
-# truckDistances = getPackageDistances(truck_1.packages, truck_1)
-#print("TRUCK DISTANCES")
-#print(truckDistances)
-
-# getNextDestination(getTruckDestinations(truck_1.packages, truck_1))
-# print("Here's the next stop! ")
-# print(getNextDestination(getTruckDestinations(truck_1.packages, truck_1)))
-
 # print('\nPackages in Truck #1')
 # for i, sublist in enumerate(truck_1.packages):
 #     print(truck_1.packages[i])
 
-# driveToLocation(truck_1)
-
-#print(truck_1.currentLocation)
-#print(truck_1.miles)
-
-# deliverPackage(Truck_1_Packages)
-
-
 for packages in truck_1.packages:                                                                                       # for loop to deliver packges while list had objs
 
-    getNextDestination(getTruckDestinations(Truck_1_Packages, truck_1))                                                 # leave truck package list alone, change Truck_1_Packages
+    Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
+    getNextDestination(Truck_1_Packages, truck_1)
     driveToLocation(truck_1)
     deliverPackage(truck_1, Truck_1_Packages)
-    truck_1.loadPackages(Truck_1_Packages)            # refresh truck.packages
+    truck_1.loadPackages(Truck_1_Packages)                                                                              # refresh truck.packages
 
+print(f"Truck 1 milage: {truck_1.miles}")
+milage = 0
 
-    # if truck_packages is empty
-        # returnToHub()
+for packages in truck_2.packages:
 
-print(f" Truck 1 milage: {truck_1.miles}")
-
-for packages in truck_2.packages:                                                        #need to tweak functions to use generic stuff
-
-    getNextDestination(getTruckDestinations(Truck_2_Packages, truck_2))
+    Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
+    getNextDestination(Truck_2_Packages, truck_2)
     driveToLocation(truck_2)
     deliverPackage(truck_2, Truck_2_Packages)
-    truck_2.loadPackages(Truck_2_Packages)            # refresh truck.packages
+    truck_2.loadPackages(Truck_2_Packages)                                                                              # refresh truck.packages
 
 
 print(f" Truck 2 milage: {truck_2.miles}")
+milage = 0
+
+for packages in truck_3.packages:
+
+    Truck_3_Destinations = getTruckDestinations(Truck_3_Packages, truck_3)
+    getNextDestination(Truck_3_Packages, truck_3)
+    driveToLocation(truck_3)
+    deliverPackage(truck_3, Truck_3_Packages)
+    truck_3.loadPackages(Truck_3_Packages)                                                                              # refresh truck.packages
 
 
-# print('\nPackages in Truck #1')
-# for i, sublist in enumerate(Truck_1_Packages):
-#     print(Truck_1_Packages[i])
+print(f" Truck 3 milage: {truck_3.miles}")
+milage = 0
 
-# print("\nPackages from Hashtable:")
-# # Fetch data from Hash Table
-# for i in range(len(myHash.table) + 1):
-#     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+for packages in truck_4.packages:
 
+    Truck_4_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_4)
+    getNextDestination(Truck_1_SecondTrip_Packages, truck_4)
+    driveToLocation(truck_4)
+    deliverPackage(truck_4, Truck_1_SecondTrip_Packages)
+    truck_4.loadPackages(Truck_1_SecondTrip_Packages)                                                                              # refresh truck.packages
+
+
+print(f" Truck 4 milage: {truck_4.miles}")
+milage = 0
+
+print("\nPackages from Hashtable:")
+# Fetch data from Hash Table
+for i in range(len(myHash.table) + 1):
+    print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
