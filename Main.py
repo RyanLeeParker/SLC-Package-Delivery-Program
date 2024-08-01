@@ -174,14 +174,26 @@ def getDistances(truckPackageIDs, truckDestinations):
 def getNextDestination(truckPackages, truck):
     global temp_index_address
     global milage
+    columnIndex = 0
     currentLocation = truck.currentLocation                                                                             # new line to correct wrong destination
     indexes = getDistanceCols(truckPackages, truck)
 
     m = float('inf')                                                                                                    # Initialize m to a very high value
-    currentCol = getColumn(distances, 0)                        # returns column, need to kep track of current location index and pass as i, not just 0
-    # if column != 0
-    #   currentCol = getColumn(distances, temp_index_address)
 
+    # first element in addresses tuple is correct row, second element is address
+    # use current location!
+    for address in addresses:
+        #print(f"currentLocation: {currentLocation}")
+        #print(f"current address: {address[1]}")
+        if currentLocation == address[1]:
+            columnIndex = int(address[0])
+
+
+    #print(f"columnIndex: {columnIndex}")
+    currentCol = getColumn(distances, (columnIndex - 1))
+    #currentCol = getColumn(distances, 0)                        # returns column, need to kep track of current location index and pass as i, not just 0        original line
+    #currentCol = getColumn(distances, 1)                          # returns as if current location is Dalton
+    #currentCol = getColumn(distances, 2)
 
     for i in indexes:
         distance = currentCol[i]
