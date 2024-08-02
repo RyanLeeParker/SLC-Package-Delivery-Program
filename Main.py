@@ -175,25 +175,26 @@ def getNextDestination(truckPackages, truck):
     global temp_index_address
     global milage
     columnIndex = 0
-    currentLocation = truck.currentLocation                                                                             # new line to correct wrong destination
-    indexes = getDistanceCols(truckPackages, truck)
+    currentLocation = truck.currentLocation
+    indexes = getDistanceCols(truckPackages, truck)                                                                     # indexes for each current package in list
 
     m = float('inf')                                                                                                    # Initialize m to a very high value
 
-    # first element in addresses tuple is correct row, second element is address
-    # use current location!
     for address in addresses:
-        #print(f"currentLocation: {currentLocation}")
-        #print(f"current address: {address[1]}")
         if currentLocation == address[1]:
             columnIndex = int(address[0])
 
-
-    #print(f"columnIndex: {columnIndex}")
     currentCol = getColumn(distances, (columnIndex - 1))
-    #currentCol = getColumn(distances, 0)                        # returns column, need to kep track of current location index and pass as i, not just 0        original line
-    #currentCol = getColumn(distances, 1)                          # returns as if current location is Dalton
-    #currentCol = getColumn(distances, 2)
+
+    if truckPackages == []:                                                                                             # take first element of currentCol for milage back to hub!
+        milage = float(currentCol[0])
+        # truck.miles += milage
+        if truck.currentLocation != '4001 South 700 East':
+            returnToHub(truck)
+        else:
+            milage = 0
+            return
+
 
     for i in indexes:
         distance = currentCol[i]
@@ -204,12 +205,13 @@ def getNextDestination(truckPackages, truck):
                 m = distance
                 milage = m
 
-    if m == float('inf'):                                                                                                   # Ensure m has been updated from its initial value
+    if m == float('inf'):                                                                                               # Ensure m has been updated from its initial value
         print("No valid destination found")
         milage = 0
+        return
     else:
         print(f"Closest destination is {m} miles away.")
-        print(f"Closest destination is at address: {allAddresses[temp_index_address]}")                 # wrong
+        print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
 
 
 def driveToLocation(truck):
@@ -242,9 +244,11 @@ def deliveryTime():
     return deliveryTimeString
 
 
-# def returnToHub(truck_packages):                                                                                        # if package list is empty
-#     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
-#     truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
+def returnToHub(truck):                                             # if package list is empty
+    truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
+    truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
+    temp_index_address = 0
+    truck.miles += milage
 
 # def driverAvailabile():                              # takes time from when T1 arrives at warehouse, and starts T3 then. OR. Calc by hand time taken, and just start T3 then. (much easier)
 
@@ -293,9 +297,15 @@ for packages in truck_1.packages:                                               
 
     Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
     getNextDestination(Truck_1_Packages, truck_1)
-    driveToLocation(truck_1)
-    deliverPackage(truck_1, Truck_1_Packages)
-    truck_1.loadPackages(Truck_1_Packages)                                                                              # refresh truck.packages
+
+    if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_Packages == [])):
+        break
+    else:
+        driveToLocation(truck_1)
+        deliverPackage(truck_1, Truck_1_Packages)
+        truck_1.loadPackages(Truck_1_Packages)                                                                              # refresh truck.packages
+        #print(f"Truck milage after each delivery: {truck_1.miles}")
+
 
 print(f"Truck 1 milage: {truck_1.miles}")
 total_milage += truck_1.miles
@@ -305,9 +315,13 @@ for packages in truck_2.packages:
 
     Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
     getNextDestination(Truck_2_Packages, truck_2)
-    driveToLocation(truck_2)
-    deliverPackage(truck_2, Truck_2_Packages)
-    truck_2.loadPackages(Truck_2_Packages)                                                                              # refresh truck.packages
+
+    if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
+        break
+    else:
+        driveToLocation(truck_2)
+        deliverPackage(truck_2, Truck_2_Packages)
+        truck_2.loadPackages(Truck_2_Packages)                                                                              # refresh truck.packages
 
 
 print(f" Truck 2 milage: {truck_2.miles}")
@@ -318,9 +332,13 @@ for packages in truck_3.packages:
 
     Truck_3_Destinations = getTruckDestinations(Truck_3_Packages, truck_3)
     getNextDestination(Truck_3_Packages, truck_3)
-    driveToLocation(truck_3)
-    deliverPackage(truck_3, Truck_3_Packages)
-    truck_3.loadPackages(Truck_3_Packages)                                                                              # refresh truck.packages
+
+    if ((truck_3.currentLocation == '4001 South 700 East') & (Truck_3_Packages == [])):
+        break
+    else:
+        driveToLocation(truck_3)
+        deliverPackage(truck_3, Truck_3_Packages)
+        truck_3.loadPackages(Truck_3_Packages)                                                                              # refresh truck.packages
 
 
 print(f" Truck 3 milage: {truck_3.miles}")
@@ -331,9 +349,13 @@ for packages in truck_4.packages:
 
     Truck_4_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_4)
     getNextDestination(Truck_1_SecondTrip_Packages, truck_4)
-    driveToLocation(truck_4)
-    deliverPackage(truck_4, Truck_1_SecondTrip_Packages)
-    truck_4.loadPackages(Truck_1_SecondTrip_Packages)                                                                              # refresh truck.packages
+
+    if ((truck_4.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
+        break
+    else:
+        driveToLocation(truck_4)
+        deliverPackage(truck_4, Truck_1_SecondTrip_Packages)
+        truck_4.loadPackages(Truck_1_SecondTrip_Packages)                                                                              # refresh truck.packages
 
 
 print(f" Truck 4 milage: {truck_4.miles}")
