@@ -188,13 +188,12 @@ def getNextDestination(truckPackages, truck, currentTime):
 
     if truckPackages == []:                                                                                             # take first element of currentCol for milage back to hub!
         milage = float(currentCol[0])
-        # truck.miles += milage
         if truck.currentLocation != '4001 South 700 East':
-            returnToHub(truck)
+            currentTime = returnToHub(truck, currentTime)
+            return currentTime
         else:
             milage = 0
-            return
-
+            return currentTime
 
     for i in indexes:
         distance = currentCol[i]
@@ -208,10 +207,11 @@ def getNextDestination(truckPackages, truck, currentTime):
     if m == float('inf'):                                                                                               # Ensure m has been updated from its initial value
         print("No valid destination found")
         milage = 0
-        return
+        return currentTime
     else:
         print(f"Closest destination is {m} miles away.")
         print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
+        return currentTime
 
 
 def driveToLocation(truck):
@@ -219,49 +219,55 @@ def driveToLocation(truck):
     truck.currentLocation = allAddresses[temp_index_address]                                                            # set truck current location to getNextDestination()
     truck.miles += milage                                                                                               # increment truck milage with distance between the 2 locations
 
-def deliverPackage(truck, truckPackages, currentTime):                                                                               # marks package as delivered with timestamp
+def deliverPackage(truck, truckPackages, currentTime):                                                                  # marks package as delivered with timestamp
+    sameAddress = False                                                                                                 # used to keep multiple packages from adding delivery time at same address
     for packages in truck.packages:
         if truck.currentLocation == packages.address:
             tempPackage = myHash.search(packages.ID)
-            tempPackage.status, currentTime = deliveryTime(currentTime)
-
-            # print("In deliverPAckage, post delivery.")
-            # print("Start time is at", start_time.strftime("%I:%M %p"))
-            # print("Current time is at", currentTime.strftime("%I:%M %p"))
-            # print("\n")
-
+            tempPackage.status, currentTime = deliveryTime(currentTime, sameAddress)
             myHash.insert(packages, tempPackage)
             print(f"Delivered package: {packages.ID}")
-            truckPackages.remove(packages.ID)                                                                           # removes package from truck list
+            truckPackages.remove(packages.ID)
+            sameAddress = True
 
-    return truckPackages, currentTime                                                                                                # return updated truck package list
-
-
-def deliveryTime(currentTime):
-    #start_time = datetime.strptime("08:00", "%H:%M")                # start time will need to be different for other trucks
-    deliveryTime = milage / 18
-    #print(deliveryTime)
-    delivery_timedelta = timedelta(hours=deliveryTime)
-    delivery_end_time = currentTime + delivery_timedelta
-
-    # print("Start time is at", start_time.strftime("%I:%M %p"))
-    # print("Current time is at", currentTime.strftime("%I:%M %p"))
-    # print("\n")
-    currentTime = delivery_end_time
-
-    print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
-    #deliveryTimeString = "Delivered at:  " + delivery_end_time.strftime("%I:%M %p")
-    deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
-    print("\n")
-
-    return deliveryTimeString, currentTime
+    return truckPackages, currentTime                                                                                   # return updated truck package list
 
 
-def returnToHub(truck):                                             # if package list is empty
+def deliveryTime(currentTime, sameAddress):
+    if sameAddress == False:
+        deliveryTime = milage / 18
+        delivery_timedelta = timedelta(hours=deliveryTime)
+        delivery_end_time = currentTime + delivery_timedelta
+        currentTime = delivery_end_time
+        print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
+        deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
+        print("\n")
+
+        return deliveryTimeString, currentTime
+
+    if sameAddress == True:
+        deliveryTime = 0
+        delivery_timedelta = timedelta(hours=deliveryTime)
+        delivery_end_time = currentTime + delivery_timedelta
+        currentTime = delivery_end_time
+        print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
+        deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
+        print("\n")
+
+        return deliveryTimeString, currentTime
+
+
+def returnToHub(truck, currentTime):                                                                                    # if package list is empty
     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
     truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
     temp_index_address = 0
     truck.miles += milage
+
+    timeToReturn = milage / 18
+    timeToReturn_timedelta = timedelta(hours=timeToReturn)
+    timeToReturn_end_time = currentTime + timeToReturn_timedelta
+    currentTime = timeToReturn_end_time
+    return currentTime
 
 # def driverAvailabile():                              # takes time from when T1 arrives at warehouse, and starts T3 then. OR. Calc by hand time taken, and just start T3 then. (much easier)
 
@@ -277,11 +283,6 @@ addresses = list(csv.reader(open('testAddresses.csv')))
 allAddresses = []                                                                                                       # List of all addresses
 for address in range(len(addresses)):
     allAddresses.append(addresses[address][1])
-
-# print("\nPackages from Hashtable:")
-# # Fetch data from Hash Table
-# for i in range(len(myHash.table) + 1):
-#     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
 
 Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]       # 14 packages
 Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]   # 16 packages
@@ -302,83 +303,66 @@ truck_4.loadPackages(Truck_1_SecondTrip_Packages)
 
 total_milage = 0
 start_time = datetime.strptime("08:00", "%H:%M")
-currentTime = start_time
-
-# print('\nPackages in Truck #1')
-# for i, sublist in enumerate(truck_1.packages):
-#     print(truck_1.packages[i])
+Driver_1_currentTime = start_time
+Driver_2_currentTime = start_time
 
 for packages in truck_1.packages:                                                                                       # for loop to deliver packges while list had objs
-
-    # print("Start of for loop")
-    # print("Start time is at", start_time.strftime("%I:%M %p"))
-    # print("Current time is at", currentTime.strftime("%I:%M %p"))
-    # print("\n")
-
     Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
-    getNextDestination(Truck_1_Packages, truck_1, currentTime)
+    Driver_1_currentTime = getNextDestination(Truck_1_Packages, truck_1, Driver_1_currentTime)
 
     if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_Packages == [])):
         break
     else:
         driveToLocation(truck_1)
-        Truck_1_Packages, currentTime = deliverPackage(truck_1, Truck_1_Packages, currentTime)
-        truck_1.loadPackages(Truck_1_Packages)                                                                              # refresh truck.packages
-        #print(f"Truck milage after each delivery: {truck_1.miles}")
-
-    # print("End of for loop")
-    # print("Start time is at", start_time.strftime("%I:%M %p"))
-    # print("Current time is at", currentTime.strftime("%I:%M %p"))
-    # print("\n")
+        Truck_1_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_Packages, Driver_1_currentTime)
+        truck_1.loadPackages(Truck_1_Packages)                                                                          # refresh truck.packages
 
 print(f"Truck 1 milage: {truck_1.miles}")
 total_milage += truck_1.miles
 milage = 0
 
-for packages in truck_2.packages:
 
+for packages in truck_2.packages:
     Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
-    getNextDestination(Truck_2_Packages, truck_2, currentTime)
+    Driver_1_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_1_currentTime)
 
     if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
         break
     else:
         driveToLocation(truck_2)
-        Truck_2_Packages, currentTime = deliverPackage(truck_2, Truck_2_Packages, currentTime)
-        truck_2.loadPackages(Truck_2_Packages)                                                                              # refresh truck.packages
-
+        Truck_2_Packages, Driver_1_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_1_currentTime)
+        truck_2.loadPackages(Truck_2_Packages)                                                                          # refresh truck.packages
 
 print(f" Truck 2 milage: {truck_2.miles}")
 total_milage += truck_2.miles
 milage = 0
 
-for packages in truck_3.packages:
 
+for packages in truck_3.packages:
     Truck_3_Destinations = getTruckDestinations(Truck_3_Packages, truck_3)
-    getNextDestination(Truck_3_Packages, truck_3, currentTime)
+    Driver_1_currentTime = getNextDestination(Truck_3_Packages, truck_3, Driver_1_currentTime)
 
     if ((truck_3.currentLocation == '4001 South 700 East') & (Truck_3_Packages == [])):
         break
     else:
         driveToLocation(truck_3)
-        Truck_3_Packages, currentTime = deliverPackage(truck_3, Truck_3_Packages, currentTime)
+        Truck_3_Packages, Driver_1_currentTime = deliverPackage(truck_3, Truck_3_Packages, Driver_1_currentTime)
         truck_3.loadPackages(Truck_3_Packages)                                                                              # refresh truck.packages
-
 
 print(f" Truck 3 milage: {truck_3.miles}")
 total_milage += truck_3.miles
 milage = 0
 
-for packages in truck_4.packages:
 
+for packages in truck_4.packages:
     Truck_4_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_4)
-    getNextDestination(Truck_1_SecondTrip_Packages, truck_4, currentTime)
+    Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_4, Driver_1_currentTime)
 
     if ((truck_4.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
         break
     else:
         driveToLocation(truck_4)
-        Truck_1_SecondTrip_Packages, currentTime = deliverPackage(truck_4, Truck_1_SecondTrip_Packages, currentTime)
+        Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_4, Truck_1_SecondTrip_Packages, Driver_1_currentTime)
         truck_4.loadPackages(Truck_1_SecondTrip_Packages)                                                                              # refresh truck.packages
 
 
