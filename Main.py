@@ -269,9 +269,6 @@ def returnToHub(truck, currentTime):                                            
     currentTime = timeToReturn_end_time
     return currentTime
 
-# def driverAvailabile():                              # takes time from when T1 arrives at warehouse, and starts T3 then. OR. Calc by hand time taken, and just start T3 then. (much easier)
-
-
 
 # MAIN START
 
@@ -287,7 +284,7 @@ for address in range(len(addresses)):
 Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]                                              # 14 packages
 Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]                                          # 16 packages
 Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]                                                                # 7  packages, departs when Truck 1 returns
-Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                               # 3 remaining packages to be delivered
+Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                               # 3 remaining packages to be delivered on Truck 2
 
 truck_1 = Truck()                                                                                                       # instantiate first truck
 truck_1.loadPackages(Truck_1_Packages)                                                                                  # load first truck
@@ -343,6 +340,7 @@ milage = 0
 ###############
 
 truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                                       # reload Truck 1 for second trip
+truck_1.miles = 0                                                                                                       # resets truck miles for this trip
 
 for packages in truck_1.packages:
     truck_1_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_1)
@@ -356,7 +354,7 @@ for packages in truck_1.packages:
         truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                               # refresh truck.packages
 
 print(f" Truck 3 milage: {truck_1.miles}")
-total_milage += truck_1.miles
+total_milage += truck_1.miles                                   # too much
 milage = 0
 
 ###############
@@ -364,6 +362,7 @@ milage = 0
 ###############
 
 truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                                       # reload Truck 2 for second trip
+truck_2.miles = 0                                                                                                       # resets truck miles for this trip
 
 for packages in truck_2.packages:
     truck_2_Destinations = getTruckDestinations(Truck_2_SecondTrip_Packages, truck_2)
@@ -378,12 +377,12 @@ for packages in truck_2.packages:
 
 
 print(f" Truck 4 milage: {truck_2.miles}")
-total_milage += truck_2.miles
+total_milage += truck_2.miles                                   # too much
 milage = 0
 
 print(f"The total milage for all trucks is : {total_milage}")
 
-print("\nPackages from Hashtable:")
-# Fetch data from Hash Table
-for i in range(len(myHash.table) + 1):
-    print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+# print("\nPackages from Hashtable:")
+# # Fetch data from Hash Table
+# for i in range(len(myHash.table) + 1):
+#     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
