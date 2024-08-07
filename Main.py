@@ -120,7 +120,7 @@ def loadPackageData(fileName):
                 deadline = package[5]
                 weight = package[6]
                 notes = package[7]
-                status = "Unloaded"     #can change status to delivered at whatever time
+                status = "At the Hub"                                                                                     #can change status to delivered at whatever time
             except ValueError as e:
                 print(f"Error processing line {package}: {e}")
 
@@ -205,12 +205,12 @@ def getNextDestination(truckPackages, truck, currentTime):
                 milage = m
 
     if m == float('inf'):                                                                                               # Ensure m has been updated from its initial value
-        print("No valid destination found")
+        #print("No valid destination found")
         milage = 0
         return currentTime
     else:
-        print(f"Closest destination is {m} miles away.")
-        print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
+        #print(f"Closest destination is {m} miles away.")
+        #print(f"Closest destination is at address: {allAddresses[temp_index_address]}")
         return currentTime
 
 
@@ -241,7 +241,7 @@ def deliveryTime(currentTime, sameAddress):
         currentTime = delivery_end_time
         print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
         deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
-        print("\n")
+        #print("\n")
 
         return deliveryTimeString, currentTime
 
@@ -252,7 +252,7 @@ def deliveryTime(currentTime, sameAddress):
         currentTime = delivery_end_time
         print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
         deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
-        print("\n")
+        #print("\n")
 
         return deliveryTimeString, currentTime
 
@@ -268,6 +268,72 @@ def returnToHub(truck, currentTime):                                            
     timeToReturn_end_time = currentTime + timeToReturn_timedelta
     currentTime = timeToReturn_end_time
     return currentTime
+
+
+def userInterface():                                                    # obs, origs too
+    print("PARCEL DELIVERY SERVICE")
+    print("\t 1. Print All Package Status and Total Mileage")
+    print("\t 2. Get a Single Package Status with a Time")
+    print("\t 3. Get All Package Status with a Time")
+    print("\t 4. Exit")
+    valid_options = [1, 2, 3, 4]
+
+    option = None
+
+    while option is None:
+        user_input = input("\nPlease enter your selection: ")
+
+        if user_input.isdigit() and int(user_input) in valid_options:
+            option = int(user_input)
+        else:
+            print("Error: Invalid option provided.")
+
+    if option == 1:
+        print("\nPackages from Hashtable:")
+        for i in range(len(myHash.table) + 1):
+            print("Package: {}".format(myHash.search(i + 1)))
+
+        print("\n")
+        print(f"The total milage for all trucks is : {total_milage} miles.")
+
+        userInterface()                                                                                                 # allow for multiple selections without restarting
+
+    if option == 2:                                     #look up package #19 at 10:43 am and check the info and status
+
+        timeQuery = False                                                                                               # gets time
+        while timeQuery == False:
+            try:
+                timeQuery = datetime.strptime(input("Please enter a time in the following format [hr:min am/pm]: "), "%I:%M %p")
+            except:
+                print("Improper input, please try again.")
+
+        # print("timeQuery: ", timeQuery.strftime("%I:%M %p"))
+
+        packageInput = False
+        while packageInput == False:
+            try:
+                packageInput = input("Please enter the package id: ")
+
+                if packageInput.isdigit():                                                      # not fully implemented, ended night early
+                    if myHash.lookup(int(packageInput)) is not False:
+                        package_id = int(packageInput)
+                    else:
+                        print("\tNo package found with the provided ID.\n")
+
+            except:
+                print("Improper input, please try again.")
+
+        userInterface()
+
+    if option == 3:                                     # get inputTime, create a list of all packages delivered by that time. Another list of undelivered, append this list undelivered.
+        print()
+
+        userInterface()
+
+    if option == 4:
+        exit()
+
+
 
 
 # MAIN START
@@ -297,6 +363,12 @@ start_time = datetime.strptime("08:00", "%H:%M")
 Driver_1_currentTime = start_time
 Driver_2_currentTime = start_time
 
+
+# print("\nPackages from Hashtable:")
+# # Fetch data from Hash Table
+# for i in range(len(myHash.table) + 1):
+#     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+
 ###############
 ### Truck 1 ###
 ###############
@@ -312,7 +384,9 @@ for packages in truck_1.packages:                                               
         Truck_1_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_Packages, Driver_1_currentTime)
         truck_1.loadPackages(Truck_1_Packages)                                                                          # refresh truck.packages
 
-print(f"Truck 1 milage: {truck_1.miles}")
+#print("Delivery route end time is at", Driver_1_currentTime.strftime("%I:%M %p"))                                      # 9:41am
+# print(f"Truck 1 milage: {truck_1.miles}")
+# print("\n")
 total_milage += truck_1.miles
 milage = 0
 
@@ -331,7 +405,9 @@ for packages in truck_2.packages:
         Truck_2_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_2_currentTime)
         truck_2.loadPackages(Truck_2_Packages)                                                                          # refresh truck.packages
 
-print(f" Truck 2 milage: {truck_2.miles}")
+#print("Delivery route end time is at", Driver_2_currentTime.strftime("%I:%M %p"))                                       # 9:55am
+# print(f" Truck 2 milage: {truck_2.miles}")
+# print("\n")
 total_milage += truck_2.miles
 milage = 0
 
@@ -353,8 +429,9 @@ for packages in truck_1.packages:
         Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_SecondTrip_Packages, Driver_1_currentTime)
         truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                               # refresh truck.packages
 
-print(f" Truck 3 milage: {truck_1.miles}")
-total_milage += truck_1.miles                                   # too much
+# print(f" Truck 1, second trip milage: {truck_1.miles}")
+# print("\n")
+total_milage += truck_1.miles
 milage = 0
 
 ###############
@@ -376,13 +453,17 @@ for packages in truck_2.packages:
         truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                               # refresh truck.packages
 
 
-print(f" Truck 4 milage: {truck_2.miles}")
-total_milage += truck_2.miles                                   # too much
+# print(f" Truck 2, second trip milage: {truck_2.miles}")
+# print("\n")
+total_milage += truck_2.miles
 milage = 0
 
-print(f"The total milage for all trucks is : {total_milage}")
+#print(f"The total milage for all trucks is : {total_milage}")
 
 # print("\nPackages from Hashtable:")
 # # Fetch data from Hash Table
 # for i in range(len(myHash.table) + 1):
 #     print("Package: {}".format(myHash.search(i + 1)))  # 1 to 11 is sent to myHash.search()
+
+print("\n")
+userInterface()
