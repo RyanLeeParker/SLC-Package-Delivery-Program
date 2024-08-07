@@ -284,27 +284,25 @@ allAddresses = []                                                               
 for address in range(len(addresses)):
     allAddresses.append(addresses[address][1])
 
-Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]       # 14 packages
-Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]   # 16 packages
-Truck_3_Packages = [6, 9, 24, 25, 26, 28, 32]                                    # 7  packages, departs when Truck 1 returns
-Truck_1_SecondTrip_Packages = [2, 22, 33]                                        # 3 remaining packages to be delivered
+Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]                                              # 14 packages
+Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]                                          # 16 packages
+Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]                                                                # 7  packages, departs when Truck 1 returns
+Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                               # 3 remaining packages to be delivered
 
-truck_1 = Truck()                                                                # instantiate first truck
-truck_1.loadPackages(Truck_1_Packages)                                           # load first truck
+truck_1 = Truck()                                                                                                       # instantiate first truck
+truck_1.loadPackages(Truck_1_Packages)                                                                                  # load first truck
 
 truck_2 = Truck()
 truck_2.loadPackages(Truck_2_Packages)
-
-truck_3 = Truck()
-truck_3.loadPackages(Truck_3_Packages)
-
-truck_4 = Truck()
-truck_4.loadPackages(Truck_1_SecondTrip_Packages)
 
 total_milage = 0
 start_time = datetime.strptime("08:00", "%H:%M")
 Driver_1_currentTime = start_time
 Driver_2_currentTime = start_time
+
+###############
+### Truck 1 ###
+###############
 
 for packages in truck_1.packages:                                                                                       # for loop to deliver packges while list had objs
     Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
@@ -321,53 +319,66 @@ print(f"Truck 1 milage: {truck_1.miles}")
 total_milage += truck_1.miles
 milage = 0
 
+###############
+### Truck 2 ###
+###############
 
 for packages in truck_2.packages:
     Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
-    Driver_1_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_1_currentTime)
+    Driver_2_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_2_currentTime)
 
     if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
         break
     else:
         driveToLocation(truck_2)
-        Truck_2_Packages, Driver_1_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_1_currentTime)
+        Truck_2_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_2_currentTime)
         truck_2.loadPackages(Truck_2_Packages)                                                                          # refresh truck.packages
 
 print(f" Truck 2 milage: {truck_2.miles}")
 total_milage += truck_2.miles
 milage = 0
 
+###############
+### Truck 1 ###
+###############
 
-for packages in truck_3.packages:
-    Truck_3_Destinations = getTruckDestinations(Truck_3_Packages, truck_3)
-    Driver_1_currentTime = getNextDestination(Truck_3_Packages, truck_3, Driver_1_currentTime)
+truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                                       # reload Truck 1 for second trip
 
-    if ((truck_3.currentLocation == '4001 South 700 East') & (Truck_3_Packages == [])):
+for packages in truck_1.packages:
+    truck_1_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_1)
+    Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
+
+    if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
         break
     else:
-        driveToLocation(truck_3)
-        Truck_3_Packages, Driver_1_currentTime = deliverPackage(truck_3, Truck_3_Packages, Driver_1_currentTime)
-        truck_3.loadPackages(Truck_3_Packages)                                                                              # refresh truck.packages
+        driveToLocation(truck_1)
+        Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_SecondTrip_Packages, Driver_1_currentTime)
+        truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                               # refresh truck.packages
 
-print(f" Truck 3 milage: {truck_3.miles}")
-total_milage += truck_3.miles
+print(f" Truck 3 milage: {truck_1.miles}")
+total_milage += truck_1.miles
 milage = 0
 
+###############
+### Truck 2 ###
+###############
 
-for packages in truck_4.packages:
-    Truck_4_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_4)
-    Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_4, Driver_1_currentTime)
+truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                                       # reload Truck 2 for second trip
 
-    if ((truck_4.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
+for packages in truck_2.packages:
+    truck_2_Destinations = getTruckDestinations(Truck_2_SecondTrip_Packages, truck_2)
+    Driver_2_currentTime = getNextDestination(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
+
+    if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_SecondTrip_Packages == [])):
         break
     else:
-        driveToLocation(truck_4)
-        Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_4, Truck_1_SecondTrip_Packages, Driver_1_currentTime)
-        truck_4.loadPackages(Truck_1_SecondTrip_Packages)                                                                              # refresh truck.packages
+        driveToLocation(truck_2)
+        Truck_2_SecondTrip_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_SecondTrip_Packages, Driver_2_currentTime)
+        truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                               # refresh truck.packages
 
 
-print(f" Truck 4 milage: {truck_4.miles}")
-total_milage += truck_4.miles
+print(f" Truck 4 milage: {truck_2.miles}")
+total_milage += truck_2.miles
 milage = 0
 
 print(f"The total milage for all trucks is : {total_milage}")
