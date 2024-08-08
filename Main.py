@@ -1,6 +1,7 @@
 import csv
 import math
 import enum
+import re
 from tokenize import Double
 from datetime import datetime, timedelta
 
@@ -226,7 +227,7 @@ def deliverPackage(truck, truckPackages, currentTime):                          
             tempPackage = myHash.search(packages.ID)
             tempPackage.status, currentTime = deliveryTime(currentTime, sameAddress)
             myHash.insert(packages, tempPackage)
-            print(f"Delivered package: {packages.ID}")
+            #print(f"Delivered package: {packages.ID}")
             truckPackages.remove(packages.ID)
             sameAddress = True
 
@@ -239,7 +240,7 @@ def deliveryTime(currentTime, sameAddress):
         delivery_timedelta = timedelta(hours=deliveryTime)
         delivery_end_time = currentTime + delivery_timedelta
         currentTime = delivery_end_time
-        print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
+        #print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
         deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
         #print("\n")
 
@@ -250,7 +251,7 @@ def deliveryTime(currentTime, sameAddress):
         delivery_timedelta = timedelta(hours=deliveryTime)
         delivery_end_time = currentTime + delivery_timedelta
         currentTime = delivery_end_time
-        print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
+        #print("Delivery time is at", delivery_end_time.strftime("%I:%M %p"))
         deliveryTimeString = f"Delivered at: {delivery_end_time.strftime('%I:%M %p')}"
         #print("\n")
 
@@ -272,9 +273,9 @@ def returnToHub(truck, currentTime):                                            
 
 def userInterface():                                                    # obs, origs too
     print("PARCEL DELIVERY SERVICE")
-    print("\t 1. Print All Package Status and Total Mileage")
-    print("\t 2. Get a Single Package Status with a Time")
-    print("\t 3. Get All Package Status with a Time")
+    print("\t 1. Print All Package Status and Total Mileage")                                                           # print all packages
+    print("\t 2. Get a Single Package Status with a Time")                                                              # take id & time, return package status at that time
+    print("\t 3. Get All Package Status with a Time")                                                                   # take time, return all packages at that time
     print("\t 4. Exit")
     valid_options = [1, 2, 3, 4]
 
@@ -288,13 +289,14 @@ def userInterface():                                                    # obs, o
         else:
             print("Error: Invalid option provided.")
 
-    if option == 1:
+    if option == 1:                                                                                                     # print all packages
         print("\nPackages from Hashtable:")
         for i in range(len(myHash.table) + 1):
             print("Package: {}".format(myHash.search(i + 1)))
 
         print("\n")
         print(f"The total milage for all trucks is : {total_milage} miles.")
+        print("\n")
 
         userInterface()                                                                                                 # allow for multiple selections without restarting
 
@@ -310,23 +312,52 @@ def userInterface():                                                    # obs, o
         # print("timeQuery: ", timeQuery.strftime("%I:%M %p"))
 
         packageInput = False
-        while packageInput == False:
+        while packageInput is False:
             try:
                 packageInput = input("Please enter the package id: ")
 
                 if packageInput.isdigit():                                                      # not fully implemented, ended night early
-                    if myHash.lookup(int(packageInput)) is not False:
+                    #print(f"packageInput: {packageInput}")
+                    if myHash.search(int(packageInput)) is not False:
                         package_id = int(packageInput)
+                        #print(f"package_ID: {[package_id]}")
                     else:
                         print("\tNo package found with the provided ID.\n")
 
             except:
                 print("Improper input, please try again.")
 
+
+        queriedPackage = myHash.search(package_id)
+
+        status = queriedPackage.status                                          # 08:00 am
+        deliveredTime = status.split("at: ")[1].strip()                         # string from package status
+        time_obj = datetime.strptime(deliveredTime, "%I:%M %p")         # string converted to timeobject of just time
+        #print(timeQuery.strftime("%I:%M %p"))                                   # user input time obj
+        #print(time_obj.strftime("%I:%M %p"))                                    # pkg delivered time obj
+        print("\n")
+
+        if timeQuery < time_obj:
+            #print(f"{timeQuery} is before {time_obj}")
+            queriedPackage.status = "At the Hub at " + timeQuery.strftime("%I:%M %p")
+            print(queriedPackage)
+
+        elif timeQuery > time_obj:
+            #print(f"{timeQuery} is after {time_obj}")
+            print(queriedPackage)
+        else:
+            #print(f"{timeQuery} is the same as {time_obj}")
+            print(queriedPackage)
+
+        print("\n")
         userInterface()
 
     if option == 3:                                     # get inputTime, create a list of all packages delivered by that time. Another list of undelivered, append this list undelivered.
         print()
+
+    
+
+
 
         userInterface()
 
