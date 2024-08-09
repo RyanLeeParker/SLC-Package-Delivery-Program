@@ -253,7 +253,7 @@ def returnToHub(truck, currentTime):                                            
     return currentTime
 
 
-def userInterface():                                                    # obs, origs too
+def userInterface(total_milage):                                                    # obs, origs too
     print("\n")
     print("PARCEL DELIVERY SERVICE")
     print("\t 1. Print All Package Status and Total Mileage")                                                           # print all packages
@@ -281,7 +281,8 @@ def userInterface():                                                    # obs, o
         print(f"The total milage for all trucks is : {total_milage} miles.")
         print("\n")
 
-        userInterface()                                                                                                 # allow for multiple selections without restarting
+        #userInterface()                                                                                                 # allow for multiple selections without restarting
+        return True
 
     if option == 2:                                                                                                     #look up package at a time and check the info and status
 
@@ -313,9 +314,11 @@ def userInterface():                                                    # obs, o
         time_obj = datetime.strptime(deliveredTime, "%I:%M %p")         # string converted to timeobject of just time
         print("\n")
 
-        if timeQuery < time_obj:
-            queriedPackage.status = "At the Hub at " + timeQuery.strftime("%I:%M %p")
+        if timeQuery < time_obj:                                                                                        # if time entered is before delivery time,
+            tempStatus = queriedPackage.status
+            queriedPackage.status = "At the Hub at: " + timeQuery.strftime("%I:%M %p")
             print(queriedPackage)
+            queriedPackage.status = tempStatus
 
         elif timeQuery > time_obj:
             print(queriedPackage)
@@ -324,7 +327,8 @@ def userInterface():                                                    # obs, o
 
         print("\n")
 
-        userInterface()
+        #userInterface()
+        return True
 
     if option == 3:                                     # get inputTime, create a list of all packages delivered by that time. Another list of undelivered, append this list undelivered.
 
@@ -343,25 +347,121 @@ def userInterface():                                                    # obs, o
 
             if tempPackage3 is not None:
                 status = tempPackage3.status
-
                 deliveryTime = status.split("at: ")[1].strip()                                                          # string from package status
                 time_obj3 = datetime.strptime(deliveryTime, "%I:%M %p")
 
                 if timeQuery_3 < time_obj3:                                                                             # if time entered is before delivery time,
-
-                    tempPackage3.status = "At the Hub at " + timeQuery_3.strftime("%I:%M %p")
-                    undeliveredPackagesArray.append(tempPackage3)
+                    tempStatus3 = tempPackage3.status
+                    tempPackage3.status = "At the Hub at: " + timeQuery_3.strftime("%I:%M %p")              # i don't think this is actually temporary
+                    print(tempPackage3)
+                    tempPackage3.status = tempStatus3
+                    #undeliveredPackagesArray.append(tempPackage3)
 
                 elif timeQuery_3 > time_obj3:
-                    undeliveredPackagesArray.append(tempPackage3)
+                    #undeliveredPackagesArray.append(tempPackage3)
+                    print(tempPackage3)
+        # for packages in undeliveredPackagesArray:
+        #     print(packages)
 
-        for packages in undeliveredPackagesArray:
-            print(packages)
-
-        userInterface()
+        #userInterface()
+        return True
 
     if option == 4:
         exit()
+
+
+def truckSimulation():
+    myHash = ChainingHashTable()  # Hash table instance
+    loadPackageData('testFile.csv')  # Load packages to Hash Table
+    distances = list(csv.reader(open('testDistance3.csv')))
+    addresses = list(csv.reader(open('testAddresses.csv')))
+
+    allAddresses = []  # List of all addresses
+    for address in range(len(addresses)):
+        allAddresses.append(addresses[address][1])
+
+    Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]  # 14 packages
+    Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]  # 16 packages
+    Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]  # 7  packages, departs when Truck 1 returns
+    Truck_2_SecondTrip_Packages = [2, 22, 33]  # 3 remaining packages to be delivered on Truck 2
+
+    truck_1 = Truck()  # instantiate first truck
+    truck_1.loadPackages(Truck_1_Packages)  # load first truck
+
+    truck_2 = Truck()
+    truck_2.loadPackages(Truck_2_Packages)
+
+    total_milage = 0
+    start_time = datetime.strptime("08:00", "%H:%M")
+    Driver_1_currentTime = start_time
+    Driver_2_currentTime = start_time
+
+    for packages in truck_1.packages:  # for loop to deliver packges while list had objs                                Truck 1
+        Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
+        Driver_1_currentTime = getNextDestination(Truck_1_Packages, truck_1, Driver_1_currentTime)
+
+        if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_Packages == [])):
+            break
+        else:
+            driveToLocation(truck_1)
+            Truck_1_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_Packages, Driver_1_currentTime)
+            truck_1.loadPackages(Truck_1_Packages)  # refresh truck.packages
+
+    total_milage += truck_1.miles
+    milage = 0
+
+    for packages in truck_2.packages:                                                                                   #Truck 2
+        Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
+        Driver_2_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_2_currentTime)
+
+        if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
+            break
+        else:
+            driveToLocation(truck_2)
+            Truck_2_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_2_currentTime)
+            truck_2.loadPackages(Truck_2_Packages)  # refresh truck.packages
+
+    total_milage += truck_2.miles
+    milage = 0
+
+    truck_1.loadPackages(Truck_1_SecondTrip_Packages)  # reload Truck 1 for second trip
+    truck_1.miles = 0  # resets truck miles for this trip
+
+    for packages in truck_1.packages:                                                                                   #Truck 1.5
+        truck_1_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_1)
+        Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
+
+        if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
+            break
+        else:
+            driveToLocation(truck_1)
+            Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_SecondTrip_Packages,
+                                                                               Driver_1_currentTime)
+            truck_1.loadPackages(Truck_1_SecondTrip_Packages)  # refresh truck.packages
+
+    total_milage += truck_1.miles
+    milage = 0
+
+    truck_2.loadPackages(Truck_2_SecondTrip_Packages)  # reload Truck 2 for second trip
+    truck_2.miles = 0  # resets truck miles for this trip
+
+    for packages in truck_2.packages:                                                                                   #Truck 2.5
+        truck_2_Destinations = getTruckDestinations(Truck_2_SecondTrip_Packages, truck_2)
+        Driver_2_currentTime = getNextDestination(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
+
+        if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_SecondTrip_Packages == [])):
+            break
+        else:
+            driveToLocation(truck_2)
+            Truck_2_SecondTrip_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_SecondTrip_Packages,
+                                                                               Driver_2_currentTime)
+            truck_2.loadPackages(Truck_2_SecondTrip_Packages)  # refresh truck.packages
+
+    total_milage += truck_2.miles
+    milage = 0
+    print("\n")
+    return total_milage
+
 
 
 # MAIN START
@@ -375,104 +475,9 @@ allAddresses = []                                                               
 for address in range(len(addresses)):
     allAddresses.append(addresses[address][1])
 
-Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]                                              # 14 packages
-Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]                                          # 16 packages
-Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]                                                                # 7  packages, departs when Truck 1 returns
-Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                               # 3 remaining packages to be delivered on Truck 2
 
-truck_1 = Truck()                                                                                                       # instantiate first truck
-truck_1.loadPackages(Truck_1_Packages)                                                                                  # load first truck
+total_milage = truckSimulation()
 
-truck_2 = Truck()
-truck_2.loadPackages(Truck_2_Packages)
-
-total_milage = 0
-start_time = datetime.strptime("08:00", "%H:%M")
-Driver_1_currentTime = start_time
-Driver_2_currentTime = start_time
-
-###############
-### Truck 1 ###
-###############
-
-for packages in truck_1.packages:                                                                                       # for loop to deliver packges while list had objs
-    Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
-    Driver_1_currentTime = getNextDestination(Truck_1_Packages, truck_1, Driver_1_currentTime)
-
-    if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_Packages == [])):
-        break
-    else:
-        driveToLocation(truck_1)
-        Truck_1_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_Packages, Driver_1_currentTime)
-        truck_1.loadPackages(Truck_1_Packages)                                                                          # refresh truck.packages
-
-
-total_milage += truck_1.miles
-milage = 0
-
-###############
-### Truck 2 ###
-###############
-
-for packages in truck_2.packages:
-    Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
-    Driver_2_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_2_currentTime)
-
-    if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
-        break
-    else:
-        driveToLocation(truck_2)
-        Truck_2_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_2_currentTime)
-        truck_2.loadPackages(Truck_2_Packages)                                                                          # refresh truck.packages
-
-
-total_milage += truck_2.miles
-milage = 0
-
-###############
-### Truck 1 ###
-###############
-
-truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                                       # reload Truck 1 for second trip
-truck_1.miles = 0                                                                                                       # resets truck miles for this trip
-
-for packages in truck_1.packages:
-    truck_1_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_1)
-    Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
-
-    if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
-        break
-    else:
-        driveToLocation(truck_1)
-        Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_SecondTrip_Packages, Driver_1_currentTime)
-        truck_1.loadPackages(Truck_1_SecondTrip_Packages)                                                               # refresh truck.packages
-
-
-total_milage += truck_1.miles
-milage = 0
-
-###############
-### Truck 2 ###
-###############
-
-truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                                       # reload Truck 2 for second trip
-truck_2.miles = 0                                                                                                       # resets truck miles for this trip
-
-for packages in truck_2.packages:
-    truck_2_Destinations = getTruckDestinations(Truck_2_SecondTrip_Packages, truck_2)
-    Driver_2_currentTime = getNextDestination(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
-
-    if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_SecondTrip_Packages == [])):
-        break
-    else:
-        driveToLocation(truck_2)
-        Truck_2_SecondTrip_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_SecondTrip_Packages, Driver_2_currentTime)
-        truck_2.loadPackages(Truck_2_SecondTrip_Packages)                                                               # refresh truck.packages
-
-
-total_milage += truck_2.miles
-milage = 0
-
-print("\n")
-
-userInterface()                                                                                                         # simulation fully runs, then user interface enables
+while userInterface(total_milage) is not None:
+    userInterface(total_milage)                                                                                         # simulation fully runs, then user interface enables
+    truckSimulation()
