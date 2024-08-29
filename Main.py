@@ -8,53 +8,41 @@ from datetime import datetime, timedelta
 
 class ChainingHashTable:
     def __init__(self, initial_capacity=40):
-        self.table = []
-        for i in range(initial_capacity):
-            self.table.append([])
+        self.table = [[] for i in range(initial_capacity)]
 
-    def insert(self, key, item):  # does both insert and update
-        # get the bucket list where this item will go.
-        bucket = hash(key) % len(self.table)
-        bucket_list = self.table[bucket]
+    def insert(self, key, item):
+        bucket_index = hash(key) % len(self.table)
+        bucket = self.table[bucket_index]
 
-        # update key if it is already in the bucket
-        for kv in bucket_list:
-            # print (key_value)
-            if kv[0] == key:
-                kv[1] = item
+        for entry in bucket:
+            if entry[0] == key:
+                entry[1] = item
                 return True
 
-        # if not, insert the item to the end of the bucket list.
-        key_value = [key, item]
-        bucket_list.append(key_value)
+        bucket.append([key, item])
         return True
 
-    # Searches for an item with matching key in the hash table.
-    # Returns the item if found, or None if not found.
     def search(self, key):
-        # get the bucket list where this key would be.
-        bucket = hash(key) % len(self.table)
-        bucket_list = self.table[bucket]
-        # print(bucket_list)
+        bucket_index = hash(key) % len(self.table)
+        bucket = self.table[bucket_index]
 
-        # search for the key in the bucket list
-        for kv in bucket_list:
-            # print (key_value)
-            if kv[0] == key:
-                return kv[1]  # value
+        for entry in bucket:
+            if entry[0] == key:
+                return entry[1]
+
         return None
 
-    # Removes an item with matching key from the hash table.
     def remove(self, key):
-        # get the bucket list where this item will be removed from.
-        bucket = hash(key) % len(self.table)
-        bucket_list = self.table[bucket]
+        bucket_index = hash(key) % len(self.table)
+        bucket = self.table[bucket_index]
 
-        # remove the item from the bucket list if it is present.
-        for kv in bucket_list:
-            # print (key_value)
-            if kv[0] == key:
-                bucket_list.remove([kv[0], kv[1]])
+        for entry in bucket:
+            if entry[0] == key:
+                bucket.remove(entry)
+                return True
+
+        return False
+
 
 class Package:
     def __init__(self, ID, address, city, state, zip, deadline, weight, notes, status):
@@ -79,95 +67,82 @@ class Truck:
         self.previousLocation = ''
         self.packages = []
 
-    def loadPackages(self, packageList):
-        packages = []
-        for i in range(len(packageList)):
-            packages.insert(
-                packageList[i], myHash.search(packageList[i]))
-        self.packages = packages
+    def addPackages(self, packageIDs):
+        loadedPackages = []
+        for index in range(len(packageIDs)):
+            loadedPackages.insert(
+                packageIDs[index], myHash.search(packageIDs[index])
+            )
+        self.packages = loadedPackages
 
-    def getAddressID(packages):
-        packageID = packages.packages.destination
-
-    def findClosestNeighbor(packages):
-        packages = packages.packages
-        destinations = []
-        addresses = list(csv.reader(open('testAddresses.csv')))
-
-        for col in addresses:                                                                                           # Get ID and address columns from addresses.csv
-            ID = col[0]
-            address = col[1]
-
-        for col in distances:
-            ID = col[0]
-            destinations.append(col[0])
+    def findAddressID(package):
+        addressID = package.packages.destination
+        return addressID
 
 
-def loadPackageData(fileName):
-    with open(fileName) as packagesToDeliver:
-        packageData = csv.reader(packagesToDeliver, delimiter=',')
-        next(packageData)                                                                                               # skip header
+def getPackageData(fileName):
+    with open(fileName) as file:
+        packageData = csv.reader(file, delimiter=',')
+        next(packageData)                                                                                               # Skip the header row
+
         for package in packageData:
             try:
                 ID = int(package[0])
-                address = package[1]
-                city = package[2]
-                state = package[3]
-                zip = package[4]
-                deadline = package[5]
-                weight = package[6]
-                notes = package[7]
+                address, city, state, zip, deadline, weight, notes = package[1:8]
                 status = "At the Hub"
-            except ValueError as e:
-                print(f"Error processing line {package}: {e}")
 
-            p = Package(ID, address, city, state, zip, deadline, weight, notes, status)                                 # package object
-            myHash.insert(ID, p)                                                                                        # insert it into the hash table
+                packageObj = Package(ID, address, city, state, zip, deadline, weight, notes, status)                    # package object
+                myHash.insert(ID, packageObj)                                                                           # insert it into the hash table
 
-
-def getTruckDestinations(truckPackages, truck):                                                                         # makes truckDestination list with just addresses from truckPackages
-    global truckDestinations
-    truckDestinations = []
-    for package in range(len(truckPackages)):
-        truckDestinations.append(truck.packages[package].address)
-    return truckDestinations
+            except ValueError as error:
+                print(f"Error processing package {package}: {error}")
 
 
-def getColumn(matrix, i):                                                                                               # Function that takes a matrix and list of indexes(i) and returns corresponding columns.
-    return [row[i] for row in matrix]
+def extractDeliveryAddresses(packageList, deliveryVehicle):                                                             # makes truckDestination list with just addresses from truckPackages
+    global deliveryAddresses
+    deliveryAddresses = []
+    for i in range(len(packageList)):
+        deliveryAddresses.append(deliveryVehicle.packages[i].address)
+    return deliveryAddresses
 
 
-def getDistanceCols(truckPackages, truck):                                                                              # Returns list of column indexes given a list  of packages, increments by 1 due to conversion to array
-    destinations = getTruckDestinations(truckPackages, truck)
-    destinationIndexes = []
-    for destination in destinations:
-        if destination in allAddresses:
-            destinationIndexes.append(allAddresses.index(destination))
-    return destinationIndexes
+def extractColumn(grid, index):                                                                                         # Function that takes a matrix and list of indexes(i) and returns corresponding columns.
+    return [row[index] for row in grid]
 
 
-def getPackageDistances(truckPackages, truck):                                                                          # Function that takes in a list of packages and returns the corresponding distance data.
-    destinationIndexes = getDistanceCols(truckPackages, truck)
-    truckDistances = []
-    for i in destinationIndexes:
-        truckDistances.append(getColumn(distances, i))
-    return truckDistances
+def findColumnIndexes(packageList, vehicle):                                                                            # Returns list of column indexes given a list  of packages, increments by 1 due to conversion to array
+    addresses = extractDeliveryAddresses(packageList, vehicle)
+    columnIndexes = []
+    for address in addresses:
+        if address in allAddresses:
+            columnIndexes.append(allAddresses.index(address))
+    return columnIndexes
 
-def getDistances(truckPackageIDs, truckDestinations):
-    packageDistances = []
-    truckPackageDistanceList = []
-    allPackageIDs = [[]]
 
-    for col in addresses:
-        ID = col[0]
-        allPackageIDs.append(ID)
+def calculatePackageDistances(packageList, vehicle):                                                                    # Function that takes in a list of packages and returns the corresponding distance data.
+    columnIndexes = findColumnIndexes(packageList, vehicle)
+    distanceData = []
+    for index in columnIndexes:
+        distanceData.append(extractColumn(distanceMatrix, index))
+    return distanceData
 
-def getNextDestination(truckPackages, truck, currentTime):
+
+def calculateDistances(packageIDs, deliveryAddresses):
+    distancesList = []
+    packageDistanceDetails = []
+    allIDs = [[]]
+
+    for address in allLocations:
+        currentID = address[0]
+        allIDs.append(currentID)
+
+
+def findNextStop(truckPackages, truck, currentTime):
     global temp_index_address
     global milage
     columnIndex = 0
     currentLocation = truck.currentLocation
-    indexes = getDistanceCols(truckPackages, truck)                                                                     # indexes for each current package in list
+    indexes = findColumnIndexes(truckPackages, truck)                                                                     # indexes for each current package in list
 
     m = float('inf')                                                                                                    # Initialize m to a very high value
 
@@ -175,7 +150,7 @@ def getNextDestination(truckPackages, truck, currentTime):
         if currentLocation == address[1]:
             columnIndex = int(address[0])
 
-    currentCol = getColumn(distances, (columnIndex - 1))
+    currentCol = extractColumn(distances, (columnIndex - 1))
 
     if truckPackages == []:                                                                                             # take first element of currentCol for milage back to hub!
         milage = float(currentCol[0])
@@ -204,7 +179,7 @@ def getNextDestination(truckPackages, truck, currentTime):
 
 def driveToLocation(truck):
     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
-    truck.currentLocation = allAddresses[temp_index_address]                                                            # set truck current location to getNextDestination()
+    truck.currentLocation = allAddresses[temp_index_address]                                                            # set truck current location to findNextStop()
     truck.miles += milage                                                                                               # increment truck milage with distance between the 2 locations
 
 def deliverPackage(truck, truckPackages, currentTime):                                                                  # marks package as delivered with timestamp
@@ -280,8 +255,7 @@ def userInterface(total_milage):                                                
         print("\n")
         print(f"The total milage for all trucks is : {total_milage} miles.")
         print("\n")
-
-        #userInterface()                                                                                                 # allow for multiple selections without restarting
+                                                                                            # allow for multiple selections without restarting
         return True
 
     if option == 2:                                                                                                     #look up package at a time and check the info and status
@@ -327,7 +301,6 @@ def userInterface(total_milage):                                                
 
         print("\n")
 
-        #userInterface()
         return True
 
     if option == 3:                                     # get inputTime, create a list of all packages delivered by that time. Another list of undelivered, append this list undelivered.
@@ -352,18 +325,14 @@ def userInterface(total_milage):                                                
 
                 if timeQuery_3 < time_obj3:                                                                             # if time entered is before delivery time,
                     tempStatus3 = tempPackage3.status
-                    tempPackage3.status = "At the Hub at: " + timeQuery_3.strftime("%I:%M %p")              # i don't think this is actually temporary
+                    tempPackage3.status = "At the Hub at: " + timeQuery_3.strftime("%I:%M %p")
                     print(tempPackage3)
                     tempPackage3.status = tempStatus3
-                    #undeliveredPackagesArray.append(tempPackage3)
 
                 elif timeQuery_3 > time_obj3:
-                    #undeliveredPackagesArray.append(tempPackage3)
-                    print(tempPackage3)
-        # for packages in undeliveredPackagesArray:
-        #     print(packages)
 
-        #userInterface()
+                    print(tempPackage3)
+
         return True
 
     if option == 4:
@@ -371,12 +340,12 @@ def userInterface(total_milage):                                                
 
 
 def truckSimulation():
-    myHash = ChainingHashTable()  # Hash table instance
-    loadPackageData('testFile.csv')  # Load packages to Hash Table
-    distances = list(csv.reader(open('testDistance3.csv')))
-    addresses = list(csv.reader(open('testAddresses.csv')))
+    myHash = ChainingHashTable()                                                                                        # Hash table instance
+    getPackageData('PackageFile.csv')                                                                                      # Load packages to Hash Table from package file
+    distances = list(csv.reader(open('DistanceFile.csv')))                                                             # Load distance data from distance file
+    addresses = list(csv.reader(open('AddressFile.csv')))                                                             # Load address data from address file
 
-    allAddresses = []  # List of all addresses
+    allAddresses = []                                                                                                   # List of all addresses
     for address in range(len(addresses)):
         allAddresses.append(addresses[address][1])
 
@@ -386,10 +355,10 @@ def truckSimulation():
     Truck_2_SecondTrip_Packages = [2, 22, 33]  # 3 remaining packages to be delivered on Truck 2
 
     truck_1 = Truck()  # instantiate first truck
-    truck_1.loadPackages(Truck_1_Packages)  # load first truck
+    truck_1.addPackages(Truck_1_Packages)  # load first truck
 
     truck_2 = Truck()
-    truck_2.loadPackages(Truck_2_Packages)
+    truck_2.addPackages(Truck_2_Packages)
 
     total_milage = 0
     start_time = datetime.strptime("08:00", "%H:%M")
@@ -397,39 +366,39 @@ def truckSimulation():
     Driver_2_currentTime = start_time
 
     for packages in truck_1.packages:  # for loop to deliver packges while list had objs                                Truck 1
-        Truck_1_Destinations = getTruckDestinations(Truck_1_Packages, truck_1)
-        Driver_1_currentTime = getNextDestination(Truck_1_Packages, truck_1, Driver_1_currentTime)
+        Truck_1_Destinations = extractDeliveryAddresses(Truck_1_Packages, truck_1)
+        Driver_1_currentTime = findNextStop(Truck_1_Packages, truck_1, Driver_1_currentTime)
 
         if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_Packages == [])):
             break
         else:
             driveToLocation(truck_1)
             Truck_1_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_Packages, Driver_1_currentTime)
-            truck_1.loadPackages(Truck_1_Packages)  # refresh truck.packages
+            truck_1.addPackages(Truck_1_Packages)  # refresh truck.packages
 
     total_milage += truck_1.miles
     milage = 0
 
     for packages in truck_2.packages:                                                                                   #Truck 2
-        Truck_2_Destinations = getTruckDestinations(Truck_2_Packages, truck_2)
-        Driver_2_currentTime = getNextDestination(Truck_2_Packages, truck_2, Driver_2_currentTime)
+        Truck_2_Destinations = extractDeliveryAddresses(Truck_2_Packages, truck_2)
+        Driver_2_currentTime = findNextStop(Truck_2_Packages, truck_2, Driver_2_currentTime)
 
         if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_Packages == [])):
             break
         else:
             driveToLocation(truck_2)
             Truck_2_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_Packages, Driver_2_currentTime)
-            truck_2.loadPackages(Truck_2_Packages)  # refresh truck.packages
+            truck_2.addPackages(Truck_2_Packages)  # refresh truck.packages
 
     total_milage += truck_2.miles
     milage = 0
 
-    truck_1.loadPackages(Truck_1_SecondTrip_Packages)  # reload Truck 1 for second trip
+    truck_1.addPackages(Truck_1_SecondTrip_Packages)  # reload Truck 1 for second trip
     truck_1.miles = 0  # resets truck miles for this trip
 
     for packages in truck_1.packages:                                                                                   #Truck 1.5
-        truck_1_Destinations = getTruckDestinations(Truck_1_SecondTrip_Packages, truck_1)
-        Driver_1_currentTime = getNextDestination(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
+        truck_1_Destinations = extractDeliveryAddresses(Truck_1_SecondTrip_Packages, truck_1)
+        Driver_1_currentTime = findNextStop(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
 
         if ((truck_1.currentLocation == '4001 South 700 East') & (Truck_1_SecondTrip_Packages == [])):
             break
@@ -437,17 +406,17 @@ def truckSimulation():
             driveToLocation(truck_1)
             Truck_1_SecondTrip_Packages, Driver_1_currentTime = deliverPackage(truck_1, Truck_1_SecondTrip_Packages,
                                                                                Driver_1_currentTime)
-            truck_1.loadPackages(Truck_1_SecondTrip_Packages)  # refresh truck.packages
+            truck_1.addPackages(Truck_1_SecondTrip_Packages)  # refresh truck.packages
 
     total_milage += truck_1.miles
     milage = 0
 
-    truck_2.loadPackages(Truck_2_SecondTrip_Packages)  # reload Truck 2 for second trip
+    truck_2.addPackages(Truck_2_SecondTrip_Packages)  # reload Truck 2 for second trip
     truck_2.miles = 0  # resets truck miles for this trip
 
     for packages in truck_2.packages:                                                                                   #Truck 2.5
-        truck_2_Destinations = getTruckDestinations(Truck_2_SecondTrip_Packages, truck_2)
-        Driver_2_currentTime = getNextDestination(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
+        truck_2_Destinations = extractDeliveryAddresses(Truck_2_SecondTrip_Packages, truck_2)
+        Driver_2_currentTime = findNextStop(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
 
         if ((truck_2.currentLocation == '4001 South 700 East') & (Truck_2_SecondTrip_Packages == [])):
             break
@@ -455,7 +424,7 @@ def truckSimulation():
             driveToLocation(truck_2)
             Truck_2_SecondTrip_Packages, Driver_2_currentTime = deliverPackage(truck_2, Truck_2_SecondTrip_Packages,
                                                                                Driver_2_currentTime)
-            truck_2.loadPackages(Truck_2_SecondTrip_Packages)  # refresh truck.packages
+            truck_2.addPackages(Truck_2_SecondTrip_Packages)  # refresh truck.packages
 
     total_milage += truck_2.miles
     milage = 0
@@ -467,9 +436,9 @@ def truckSimulation():
 # MAIN START
 
 myHash = ChainingHashTable()                                                                                            # Hash table instance
-loadPackageData('testFile.csv')                                                                                         # Load packages to Hash Table
-distances = list(csv.reader(open('testDistance3.csv')))
-addresses = list(csv.reader(open('testAddresses.csv')))
+getPackageData('PackageFile.csv')                                                                                          # Load packages to Hash Table
+distances = list(csv.reader(open('DistanceFile.csv')))
+addresses = list(csv.reader(open('AddressFile.csv')))
 
 allAddresses = []                                                                                                       # List of all addresses
 for address in range(len(addresses)):
