@@ -1,3 +1,7 @@
+# ID #010629953
+# Ryan Parker
+# WGU Email: rpar252@wgu.edu
+# Date: 08/30/2024
 import csv
 import math
 import enum
@@ -6,11 +10,11 @@ from tokenize import Double
 from datetime import datetime, timedelta
 
 
-class ChainingHashTable:
+class ChainingHashTable:                                                                                                # O(n), chained hash table with initial value of 40
     def __init__(self, initial_capacity=40):
         self.table = [[] for i in range(initial_capacity)]
 
-    def insert(self, key, item):
+    def insert(self, key, item):                                                                                        # takes a key-item pair and inserts it into the hashtable, duplicate keys are added to next node/bucket in the list
         bucket_index = hash(key) % len(self.table)
         bucket = self.table[bucket_index]
 
@@ -22,7 +26,7 @@ class ChainingHashTable:
         bucket.append([key, item])
         return True
 
-    def search(self, key):
+    def search(self, key):                                                                                              # takes a key and returns the associated item
         bucket_index = hash(key) % len(self.table)
         bucket = self.table[bucket_index]
 
@@ -32,7 +36,7 @@ class ChainingHashTable:
 
         return None
 
-    def remove(self, key):
+    def remove(self, key):                                                                                              # takes a key and removes the associated item
         bucket_index = hash(key) % len(self.table)
         bucket = self.table[bucket_index]
 
@@ -44,7 +48,7 @@ class ChainingHashTable:
         return False
 
 
-class Package:
+class Package:                                                                                                          # class for a package object
     def __init__(self, ID, address, city, state, zip, deadline, weight, notes, status):
         self.ID = ID
         self.address = address
@@ -60,14 +64,14 @@ class Package:
         return (f"{self.ID}, {self.address}, {self.city}, {self.state}, {self.zip}, "
                 f"{self.deadline}, {self.weight}, {self.notes}, {self.status}")
 
-class Truck:
+class Truck:                                                                                                            # O(1), class for a truck object.
     def __init__(self):
         self.miles = 0
-        self.currentLocation = '4001 South 700 East'
+        self.currentLocation = '4001 South 700 East'                                                                    # starting location of hub, all trucks begin here
         self.previousLocation = ''
         self.packages = []
 
-    def addPackages(self, packageIDs):
+    def addPackages(self, packageIDs):                                                                                  # O(n^2), loads packages onto truck objects
         loadedPackages = []
         for index in range(len(packageIDs)):
             loadedPackages.insert(
@@ -75,12 +79,12 @@ class Truck:
             )
         self.packages = loadedPackages
 
-    def findAddressID(package):
+    def findAddressID(package):                                                                                         # O(1), takes a package and returns the delivery address ID
         addressID = package.packages.destination
         return addressID
 
 
-def getPackageData(fileName):
+def getPackageData(fileName):                                                           # O(n * m), loads package data from file, creates package objects, and inserts them into the hash table
     with open(fileName) as file:
         packageData = csv.reader(file, delimiter=',')
         next(packageData)                                                                                               # Skip the header row
@@ -98,7 +102,7 @@ def getPackageData(fileName):
                 print(f"Error processing package {package}: {error}")
 
 
-def extractDeliveryAddresses(packageList, deliveryVehicle):                                                             # makes truckDestination list with just addresses from truckPackages
+def extractDeliveryAddresses(packageList, deliveryVehicle):                                                             # O(n), makes truck destination list with just addresses from truckPackages
     global deliveryAddresses
     deliveryAddresses = []
     for i in range(len(packageList)):
@@ -106,11 +110,11 @@ def extractDeliveryAddresses(packageList, deliveryVehicle):                     
     return deliveryAddresses
 
 
-def extractColumn(grid, index):                                                                                         # Function that takes a matrix and list of indexes(i) and returns corresponding columns.
+def extractColumn(grid, index):                                                                                         # O(n), Function that takes a matrix and list of indexes(i) and returns corresponding columns.
     return [row[index] for row in grid]
 
 
-def findColumnIndexes(packageList, vehicle):                                                                            # Returns list of column indexes given a list  of packages, increments by 1 due to conversion to array
+def findColumnIndexes(packageList, vehicle):                                                                            # O(n * m), Returns list of column indexes given a list  of packages, increments by 1 due to conversion to array
     addresses = extractDeliveryAddresses(packageList, vehicle)
     columnIndexes = []
     for address in addresses:
@@ -119,7 +123,7 @@ def findColumnIndexes(packageList, vehicle):                                    
     return columnIndexes
 
 
-def calculatePackageDistances(packageList, vehicle):                                                                    # Function that takes in a list of packages and returns the corresponding distance data.
+def calculatePackageDistances(packageList, vehicle):                                                                    # O(n(m + r)), Function that takes in a list of packages and returns the corresponding distance data.
     columnIndexes = findColumnIndexes(packageList, vehicle)
     distanceData = []
     for index in columnIndexes:
@@ -127,22 +131,12 @@ def calculatePackageDistances(packageList, vehicle):                            
     return distanceData
 
 
-def calculateDistances(packageIDs, deliveryAddresses):
-    distancesList = []
-    packageDistanceDetails = []
-    allIDs = [[]]
-
-    for address in allLocations:
-        currentID = address[0]
-        allIDs.append(currentID)
-
-
-def findNextStop(truckPackages, truck, currentTime):
+def findNextStop(truckPackages, truck, currentTime):                                                                    # O(n * m + a + r), finds the next stop based on shorted distance from current location
     global temp_index_address
     global milage
     columnIndex = 0
     currentLocation = truck.currentLocation
-    indexes = findColumnIndexes(truckPackages, truck)                                                                     # indexes for each current package in list
+    indexes = findColumnIndexes(truckPackages, truck)                                                                   # indexes for each current package in list
 
     m = float('inf')                                                                                                    # Initialize m to a very high value
 
@@ -177,12 +171,12 @@ def findNextStop(truckPackages, truck, currentTime):
         return currentTime
 
 
-def driveToLocation(truck):
+def driveToLocation(truck):                                                                                             # O(1), simulates driving to next location
     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
     truck.currentLocation = allAddresses[temp_index_address]                                                            # set truck current location to findNextStop()
     truck.miles += milage                                                                                               # increment truck milage with distance between the 2 locations
 
-def deliverPackage(truck, truckPackages, currentTime):                                                                  # marks package as delivered with timestamp
+def deliverPackage(truck, truckPackages, currentTime):                                                                  # O(n(m + k)), marks package as delivered with timestamp
     sameAddress = False                                                                                                 # used to keep multiple packages from adding delivery time at same address
     for packages in truck.packages:
         if truck.currentLocation == packages.address:
@@ -192,10 +186,10 @@ def deliverPackage(truck, truckPackages, currentTime):                          
             truckPackages.remove(packages.ID)
             sameAddress = True
 
-    return truckPackages, currentTime                                                                                   # return updated truck package list
+    return truckPackages, currentTime                                                                                   # return updated truck package list and updated driver time
 
 
-def deliveryTime(currentTime, sameAddress):
+def deliveryTime(currentTime, sameAddress):                                                                             # O(1), updates each drivers time based upon distance traveled and set speed
     if sameAddress == False:
         deliveryTime = milage / 18
         delivery_timedelta = timedelta(hours=deliveryTime)
@@ -215,7 +209,7 @@ def deliveryTime(currentTime, sameAddress):
         return deliveryTimeString, currentTime
 
 
-def returnToHub(truck, currentTime):                                                                                    # if package list is empty
+def returnToHub(truck, currentTime):                                                                                    # O(1), if package list is empty, returns truck to hub for reloading
     truck.previousLocation = truck.currentLocation                                                                      # Set truck previous location to current location
     truck.currentLocation = '4001 South 700 East'                                                                       # set truck current location to Hub
     temp_index_address = 0
@@ -228,14 +222,15 @@ def returnToHub(truck, currentTime):                                            
     return currentTime
 
 
-def userInterface(total_milage):                                                    # obs, origs too
+def userInterface(total_milage):                                                                                        # O(c * n), takes user input to determine output
     print("\n")
     print("PARCEL DELIVERY SERVICE")
     print("\t 1. Print All Package Status and Total Mileage")                                                           # print all packages
     print("\t 2. Get a Single Package Status with a Time")                                                              # take id & time, return package status at that time
     print("\t 3. Get All Package Status with a Time")                                                                   # take time, return all packages at that time
-    print("\t 4. Exit")
-    valid_options = [1, 2, 3, 4]
+    print("\t 4. Get single Package Status")
+    print("\t 5. Exit")
+    valid_options = [1, 2, 3, 4, 5]
 
     option = None
 
@@ -281,6 +276,19 @@ def userInterface(total_milage):                                                
                     print("Improper input, please try again.")
                     packageInput = None
 
+
+
+
+        packageNineUpdateTime = datetime.strptime("10:20", "%H:%M")
+        if (packageInput == "9") & (timeQuery < packageNineUpdateTime):                     # TQ 10:20am < 10:20am
+            print("Made it into address change in option 2")
+            updatedPackageNine = myHash.search(9)
+            updatedPackageNine.address = "300 State St"
+
+            myHash.remove(9)  # remove old 9
+            myHash.insert(9, updatedPackageNine)
+
+
         queriedPackage = myHash.search(package_id)
 
         status = queriedPackage.status                                          # 08:00 am
@@ -312,6 +320,15 @@ def userInterface(total_milage):                                                
             except:
                 print("Improper input, please try again.")
 
+        packageNineUpdateTime = datetime.strptime("10:20", "%H:%M")
+        if timeQuery_3 < packageNineUpdateTime:                     # TQ 10:20am < 10:20am
+            print("Made it into address change in option 3")
+            updatedPackageNine = myHash.search(9)
+            updatedPackageNine.address = "300 State St"
+
+            myHash.remove(9)  # remove old 9
+            myHash.insert(9, updatedPackageNine)
+
         undeliveredPackagesArray = []
 
         for i in range(len(myHash.table) + 1):
@@ -336,36 +353,57 @@ def userInterface(total_milage):                                                
         return True
 
     if option == 4:
+        packageInput = None
+        while packageInput is None:
+            packageInput = input("Please enter the package id: ")
+
+            if packageInput.isdigit():
+                if myHash.search(int(packageInput)) is not None:
+                    package_id = int(packageInput)
+                else:
+                    print("\tNo package found with the provided ID.\n")
+                    packageInput = None
+            else:
+                print("Improper input, please try again.")
+                packageInput = None
+
+        queriedPackage = myHash.search(package_id)
+        print(queriedPackage)
+
+        return True
+
+
+    if option == 5:
         exit()
 
 
-def truckSimulation():
-    myHash = ChainingHashTable()                                                                                        # Hash table instance
-    getPackageData('PackageFile.csv')                                                                                      # Load packages to Hash Table from package file
-    distances = list(csv.reader(open('DistanceFile.csv')))                                                             # Load distance data from distance file
-    addresses = list(csv.reader(open('AddressFile.csv')))                                                             # Load address data from address file
+def truckSimulation():                                                                                                  # O(n * m(a + r)), main simulation which runs by default to deliver packages
+    #myHash = ChainingHashTable()                                                                                        # Hash table instance
+    getPackageData('PackageFile.csv')                                                                                   # Load packages to Hash Table from package file
+    distances = list(csv.reader(open('DistanceFile.csv')))                                                              # Load distance data from distance file
+    addresses = list(csv.reader(open('AddressFile.csv')))                                                               # Load address data from address file
 
     allAddresses = []                                                                                                   # List of all addresses
     for address in range(len(addresses)):
         allAddresses.append(addresses[address][1])
 
-    Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]  # 14 packages
-    Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]  # 16 packages
-    Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]  # 7  packages, departs when Truck 1 returns
-    Truck_2_SecondTrip_Packages = [2, 22, 33]  # 3 remaining packages to be delivered on Truck 2
+    Truck_1_Packages = [4, 13, 14, 15, 16, 17, 19, 20, 27, 31, 34, 35, 39, 40]                                          # 14 packages
+    Truck_2_Packages = [1, 3, 5, 7, 8, 10, 11, 12, 18, 21, 23, 29, 30, 36, 37, 38]                                      # 16 packages
+    Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]                                                            # 7  packages, departs when Truck 1 returns
+    Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                           # 3  packages, departs when Truck 2 returns
 
-    truck_1 = Truck()  # instantiate first truck
-    truck_1.addPackages(Truck_1_Packages)  # load first truck
+    truck_1 = Truck()                                                                                                   # instantiate first truck
+    truck_1.addPackages(Truck_1_Packages)                                                                               # load first truck
 
-    truck_2 = Truck()
-    truck_2.addPackages(Truck_2_Packages)
+    truck_2 = Truck()                                                                                                   # instantiate second truck
+    truck_2.addPackages(Truck_2_Packages)                                                                               # load second truck
 
     total_milage = 0
     start_time = datetime.strptime("08:00", "%H:%M")
-    Driver_1_currentTime = start_time
-    Driver_2_currentTime = start_time
+    Driver_1_currentTime = start_time                                                                                   # sets driver 1 start time to 8:00am
+    Driver_2_currentTime = start_time                                                                                   # sets driver 2 start time to 8:00am
 
-    for packages in truck_1.packages:  # for loop to deliver packges while list had objs                                Truck 1
+    for packages in truck_1.packages:  # for loop to deliver packges while list had objs                                Truck 1, trip 1 deliveries
         Truck_1_Destinations = extractDeliveryAddresses(Truck_1_Packages, truck_1)
         Driver_1_currentTime = findNextStop(Truck_1_Packages, truck_1, Driver_1_currentTime)
 
@@ -379,7 +417,7 @@ def truckSimulation():
     total_milage += truck_1.miles
     milage = 0
 
-    for packages in truck_2.packages:                                                                                   #Truck 2
+    for packages in truck_2.packages:                                                                                   #Truck 2, trip 1 deliveries
         Truck_2_Destinations = extractDeliveryAddresses(Truck_2_Packages, truck_2)
         Driver_2_currentTime = findNextStop(Truck_2_Packages, truck_2, Driver_2_currentTime)
 
@@ -396,7 +434,33 @@ def truckSimulation():
     truck_1.addPackages(Truck_1_SecondTrip_Packages)  # reload Truck 1 for second trip
     truck_1.miles = 0  # resets truck miles for this trip
 
-    for packages in truck_1.packages:                                                                                   #Truck 1.5
+
+    packageUpdated = False
+
+    for packages in truck_1.packages:                                                                                   #Truck 1, trip 2 deliveries
+
+        packageUpdateTime = datetime.strptime("10:20", "%H:%M")
+
+        if (Driver_1_currentTime >= packageUpdateTime) & (packageUpdated == False):                                     # if time is after 10:20am
+                                                                                                                        # update package 9 to correct address
+            updatedPackageNine = myHash.search(9)
+            updatedPackageNine.address = "410 S State St"
+
+            myHash.remove(9)                                                                                            # remove old 9
+            myHash.insert(9, updatedPackageNine)                                                                   # insert updated 9
+
+            packageUpdated = True
+            truck_1.addPackages(Truck_1_SecondTrip_Packages)                                                            # refresh truck list with updated package data
+        elif (Driver_1_currentTime < packageUpdateTime):
+            updatedPackageNine = myHash.search(9)
+            updatedPackageNine.address = "300 State St"
+
+            myHash.remove(9)                                                                                            # remove old 9
+            myHash.insert(9, updatedPackageNine)                                                                   # insert updated 9
+
+            truck_1.addPackages(Truck_1_SecondTrip_Packages)                                                            # refresh truck list with updated package data
+
+
         truck_1_Destinations = extractDeliveryAddresses(Truck_1_SecondTrip_Packages, truck_1)
         Driver_1_currentTime = findNextStop(Truck_1_SecondTrip_Packages, truck_1, Driver_1_currentTime)
 
@@ -414,7 +478,7 @@ def truckSimulation():
     truck_2.addPackages(Truck_2_SecondTrip_Packages)  # reload Truck 2 for second trip
     truck_2.miles = 0  # resets truck miles for this trip
 
-    for packages in truck_2.packages:                                                                                   #Truck 2.5
+    for packages in truck_2.packages:                                                                                   #Truck 2, trip 2 deliveries
         truck_2_Destinations = extractDeliveryAddresses(Truck_2_SecondTrip_Packages, truck_2)
         Driver_2_currentTime = findNextStop(Truck_2_SecondTrip_Packages, truck_2, Driver_2_currentTime)
 
@@ -429,14 +493,14 @@ def truckSimulation():
     total_milage += truck_2.miles
     milage = 0
     print("\n")
-    return total_milage
+    return total_milage                                                                                                 # total milage is 104.6 mi
 
 
 
-# MAIN START
+# MAIN START                                                                                                            Overall, program is O(P * T * A)
 
 myHash = ChainingHashTable()                                                                                            # Hash table instance
-getPackageData('PackageFile.csv')                                                                                          # Load packages to Hash Table
+getPackageData('PackageFile.csv')                                                                                       # Load packages to Hash Table
 distances = list(csv.reader(open('DistanceFile.csv')))
 addresses = list(csv.reader(open('AddressFile.csv')))
 
