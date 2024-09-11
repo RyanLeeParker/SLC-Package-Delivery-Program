@@ -65,11 +65,12 @@ class Package:                                                                  
                 f"{self.deadline}, {self.weight}, {self.notes}, {self.status}")
 
 class Truck:                                                                                                            # O(1), class for a truck object.
-    def __init__(self):
+    def __init__(self, ID):
         self.miles = 0
         self.currentLocation = '4001 South 700 East'                                                                    # starting location of hub, all trucks begin here
         self.previousLocation = ''
         self.packages = []
+        self.ID = ID
 
     def addPackages(self, packageIDs):                                                                                  # O(n^2), loads packages onto truck objects
         loadedPackages = []
@@ -182,6 +183,12 @@ def deliverPackage(truck, truckPackages, currentTime):                          
         if truck.currentLocation == packages.address:
             tempPackage = myHash.search(packages.ID)
             tempPackage.status, currentTime = deliveryTime(currentTime, sameAddress)
+
+            if truck.ID == 1:
+                tempPackage.status += " by Truck 1."
+            elif truck.ID == 2:
+                tempPackage.status += " by Truck 2."
+
             myHash.insert(packages, tempPackage)
             truckPackages.remove(packages.ID)
             sameAddress = True
@@ -276,12 +283,8 @@ def userInterface(total_milage):                                                
                     print("Improper input, please try again.")
                     packageInput = None
 
-
-
-
         packageNineUpdateTime = datetime.strptime("10:20", "%H:%M")
         if (packageInput == "9") & (timeQuery < packageNineUpdateTime):                     # TQ 10:20am < 10:20am
-            print("Made it into address change in option 2")
             updatedPackageNine = myHash.search(9)
             updatedPackageNine.address = "300 State St"
 
@@ -292,15 +295,24 @@ def userInterface(total_milage):                                                
         queriedPackage = myHash.search(package_id)
 
         status = queriedPackage.status                                          # 08:00 am
-        deliveredTime = status.split("at: ")[1].strip()                         # string from package status
+        deliveredTime = status.split()[2] + " " + status.split()[3]             # string from package status
         time_obj = datetime.strptime(deliveredTime, "%I:%M %p")         # string converted to timeobject of just time
         print("\n")
 
         if timeQuery < time_obj:                                                                                        # if time entered is before delivery time,
             tempStatus = queriedPackage.status
             queriedPackage.status = "At the Hub at: " + timeQuery.strftime("%I:%M %p")
-            print(queriedPackage)
-            queriedPackage.status = tempStatus
+
+            transitTime = datetime.strptime("09:05", "%H:%M")
+            #if (timeQuery < transitTime) & (queriedPackage.ID == 6):                                                     # tempStatus3 = tempPackage3.status
+            if (timeQuery < transitTime) & (queriedPackage.ID in (6, 25, 32)):                                          # ensure flight delay packages are noted
+                queriedPackage.status = "Package not yet at depot at: " + timeQuery.strftime("%I:%M %p")
+                print(queriedPackage)
+                queriedPackage.status = tempStatus
+
+            else:
+                print(queriedPackage)
+                queriedPackage.status = tempStatus
 
         elif timeQuery > time_obj:
             print(queriedPackage)
@@ -322,7 +334,6 @@ def userInterface(total_milage):                                                
 
         packageNineUpdateTime = datetime.strptime("10:20", "%H:%M")
         if timeQuery_3 < packageNineUpdateTime:                     # TQ 10:20am < 10:20am
-            print("Made it into address change in option 3")
             updatedPackageNine = myHash.search(9)
             updatedPackageNine.address = "300 State St"
 
@@ -337,18 +348,28 @@ def userInterface(total_milage):                                                
 
             if tempPackage3 is not None:
                 status = tempPackage3.status
-                deliveryTime = status.split("at: ")[1].strip()                                                          # string from package status
+                deliveryTime = status.split()[2] + " " + status.split()[3]                                              # string from package status
                 time_obj3 = datetime.strptime(deliveryTime, "%I:%M %p")
 
                 if timeQuery_3 < time_obj3:                                                                             # if time entered is before delivery time,
                     tempStatus3 = tempPackage3.status
                     tempPackage3.status = "At the Hub at: " + timeQuery_3.strftime("%I:%M %p")
-                    print(tempPackage3)
-                    tempPackage3.status = tempStatus3
+
+                    transitTime = datetime.strptime("09:05", "%H:%M")
+                    #if (timeQuery_3 < transitTime) & (tempPackage3.ID == 6):                                            # tempStatus3 = tempPackage3.status
+                    if (timeQuery_3 < transitTime) & (tempPackage3.ID in (6, 25, 32)):                                  # ensure flight delay packages are noted
+                        tempPackage3.status = "Package not yet at depot at: " + timeQuery_3.strftime("%I:%M %p")
+                        print(tempPackage3)
+                        tempPackage3.status = tempStatus3
+                    else:
+                        print(tempPackage3)
+                        tempPackage3.status = tempStatus3
 
                 elif timeQuery_3 > time_obj3:
 
                     print(tempPackage3)
+
+        print(f"The total milage for all trucks is : {total_milage} miles.")
 
         return True
 
@@ -392,10 +413,10 @@ def truckSimulation():                                                          
     Truck_1_SecondTrip_Packages = [6, 9, 24, 25, 26, 28, 32]                                                            # 7  packages, departs when Truck 1 returns
     Truck_2_SecondTrip_Packages = [2, 22, 33]                                                                           # 3  packages, departs when Truck 2 returns
 
-    truck_1 = Truck()                                                                                                   # instantiate first truck
+    truck_1 = Truck(1)                                                                                                   # instantiate first truck
     truck_1.addPackages(Truck_1_Packages)                                                                               # load first truck
 
-    truck_2 = Truck()                                                                                                   # instantiate second truck
+    truck_2 = Truck(2)                                                                                                   # instantiate second truck
     truck_2.addPackages(Truck_2_Packages)                                                                               # load second truck
 
     total_milage = 0
